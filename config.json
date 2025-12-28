@@ -1,0 +1,16 @@
+{
+  "default_folder": "sandbox/source",
+  "recursive": true,
+  "settle_seconds": 1.5,
+  "quarantine_folder": "Quarantine",
+  "quarantine_exts": [
+    ".exe",
+    ".msi",
+    ".bat",
+    ".cmd",
+    ".ps1",
+    ".js",
+    ".vbs",
+    ".jar"
+  ]
+}
