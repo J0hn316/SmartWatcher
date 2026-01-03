@@ -82,7 +82,7 @@ def build_parser(config: dict) -> argparse.ArgumentParser:
         ),
     ]
     for spec in specs:
-        parser.add_argument(*spec["flags"], **["kwargs"])
+        parser.add_argument(*spec["flags"], **spec["kwargs"])
 
     return parser
 
