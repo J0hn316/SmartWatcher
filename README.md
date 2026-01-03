@@ -29,3 +29,9 @@ Run (apply moves)
 python src/watcher.py --folder "C:/Users/YourName/Downloads" --apply
 
 ```
+
+Run (Override quarantine list quickly)
+
+```bash
+python src/watcher.py --folder "C:/Users/YourName/Downloads" --apply --quarantine ".exe,.msi,.bat,.ps1"
+```
