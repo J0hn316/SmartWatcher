@@ -9,7 +9,7 @@ from watchdog.events import FileSystemEventHandler
 
 from rules import load_rules
 from logger_utils import setup_logger
-from organizer import move_file, settle_wait
+from organizer import move_file, wait_for_stable_file
 
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -134,13 +134,24 @@ class SmartHandler(FileSystemEventHandler):
         ):
             return
 
-        # Wait briefly so downloads finish writing.
-        settle_wait(self.settle_seconds)
+        ok = wait_for_stable_file(
+            path,
+            timeout=max(5.0, self.settle_seconds * 10),
+            interval=0.5,
+            stable_rounds=2,
+        )
+
+        if not ok:
+            self.logger.info("Skipped (not stable yet): %s", path.name)
+            return
 
         if not path.exists() or not path.is_file():
             return
 
         ext = path.suffix.lower()
+
+        if ext in {".crdownload", ".part", ".tmp"}:
+            return
 
         # Quarantine first (wins over organize rules)
         if ext in self.quarantine_exts:
@@ -167,7 +178,7 @@ def main() -> None:
     parser = build_parser(config)
     args = parser.parse_args()
 
-    base_dir = Path = args.folder.resolve()
+    base_dir: Path = args.folder.resolve()
     rules = load_rules(args.rules)
 
     quarantine_dir = base_dir / str(config.get("quarantine_folder", "Quarantine"))

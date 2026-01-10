@@ -1,8 +1,10 @@
 .venv/
 __pycache__/
+sandbox/
 *.pyc
 cache/
 *.log
+logs/
 .vscode/
 .idea/
 .DS_Store

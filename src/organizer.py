@@ -49,11 +49,48 @@ def move_file(src: Path, dest_dir: Path, dry_run: bool, logger: logging.Logger) 
         logger.error("Failed move %s → %s (%s)", src, dest, exc)
 
 
-def settle_wait(seconds: float) -> None:
+def wait_for_stable_file(
+    path: Path,
+    timeout: float = 15.0,
+    interval: float = 0.5,
+    stable_rounds: int = 2,
+) -> bool:
     """
-    Small delay to avoid moving files while they are still being written.
-    (This will be improved later with a 'stable size' check.)
+    Wait until the file size stops changing.
+
+    - timeout: max seconds to wait total
+    - interval: how often to check the file size
+    - stable_rounds: how many consecutive checks must match
+
+    Returns True if the file became stable, False if timed out.
     """
 
-    if seconds > 0:
-        time.sleep(seconds)
+    start = time.time()
+    last_size: int | None = None
+    stable_count = 0
+
+    while True:
+        # File disappeared or not ready
+        if not path.exists():
+            return False
+
+        try:
+            size = path.stat().st_size
+        except OSError:
+            # Might be temporarily locked; try again until timeout
+            size = None
+
+        if size is not None and last_size is not None and size == last_size:
+            stable_count += 1
+        else:
+            stable_count = 0
+
+        last_size = size if size is not None else last_size
+
+        if stable_count >= stable_rounds:
+            return True
+
+        if time.time() - start >= timeout:
+            return False
+
+        time.sleep(interval)
